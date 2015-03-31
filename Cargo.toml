@@ -1,0 +1,15 @@
+[package]
+
+name = "wrapping_macros"
+version = "0.0.1"
+authors = ["Chris Wong <lambda.fairy@gmail.com>"]
+
+license = "MIT/Apache-2.0"
+repository = "https://github.com/lfairy/wrapping_macros"
+description = """
+A macro for wrapping arithmetic.
+"""
+
+[lib]
+name = "wrapping_macros"
+plugin = true
