@@ -2,7 +2,15 @@
 #![plugin(wrapping_macros)]
 
 #[test]
-fn it_works() {
+fn smoke() {
     let x = wrapping! { 1 + 1 };
-    panic!("{}", x);
+    let y;
+    let z;
+    wrapping! {
+        y = 2 + 3;
+        z = y * 2;
+    }
+    assert_eq!(x, 2);
+    assert_eq!(y, 5);
+    assert_eq!(z, 10);
 }
