@@ -12,7 +12,7 @@ use syntax::ext::base::{ExtCtxt, MacResult};
 use syntax::ext::build::AstBuilder;
 use syntax::fold::Folder;
 use syntax::parse;
-use syntax::parse::token::{self, DelimToken};
+use syntax::parse::token::DelimToken;
 use syntax::ptr::P;
 use rustc::plugin::Registry;
 
@@ -47,12 +47,6 @@ impl<'cx> WrappingResult<'cx> {
         let mut parser = parse::tts_to_parser(cx.parse_sess, vec![block],
                                               cx.cfg.clone());
         let block = parser.parse_block();
-        // Make sure all tokens were consumed
-        if parser.token != token::Eof {
-            let token = parser.this_token_to_string();
-            cx.span_fatal(parser.span,
-                          &format!("unexpected token: `{}`", token));
-        }
         // Perform the fold
         let block = WrappingFolder { cx: cx }.fold_block(block);
         Some(callback(cx, block))
