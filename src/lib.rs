@@ -6,13 +6,13 @@ extern crate rustc;
 
 use std::borrow::ToOwned;
 use std::rc::Rc;
-use syntax::ast::{Block, Delimited, Expr, Stmt, Mac, TokenTree, TtDelimited};
+use syntax::ast::{BiAdd, BiSub, BiMul, BinOp_, Block, Delimited, Expr, ExprBinary, Stmt, Mac, TokenTree, TtDelimited};
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{ExtCtxt, MacResult};
 use syntax::ext::build::AstBuilder;
-use syntax::fold::Folder;
+use syntax::fold::{self, Folder};
 use syntax::parse;
-use syntax::parse::token::DelimToken;
+use syntax::parse::token::{self, DelimToken};
 use syntax::ptr::P;
 use rustc::plugin::Registry;
 
@@ -23,6 +23,45 @@ struct WrappingFolder<'cx> {
 impl<'cx> Folder for WrappingFolder<'cx> {
     fn fold_mac(&mut self, mac: Mac) -> Mac {
         self.cx.span_fatal(mac.span, "cannot call nested macros in a `wrapping!` block");
+    }
+
+    fn fold_expr(&mut self, expr: P<Expr>) -> P<Expr> {
+        expr.map(|expr| {
+            match expr.node {
+                ExprBinary(op, left, right) => {
+                    // Recurse in sub-expressions
+                    let left = left.map(|e| fold::noop_fold_expr(e, self));
+                    let right = right.map(|e| fold::noop_fold_expr(e, self));
+                    match wrapping_method(op.node) {
+                        Some(name) => {
+                            // Rewrite e.g. `a + b` to `a.wrapping_add(b)`
+                            let ident = token::str_to_ident(name);
+                            self.cx.expr_method_call(
+                                expr.span,
+                                left,
+                                ident,
+                                vec![right]).and_then(|e| e)
+                        },
+                        None =>
+                            Expr {
+                                node: ExprBinary(op, left, right),
+                                ..expr
+                            },
+                    }
+                },
+                _ => fold::noop_fold_expr(expr, self),
+            }
+        })
+    }
+}
+
+/// Returns the name of the wrapping method for some binary operator.
+fn wrapping_method(op: BinOp_) -> Option<&'static str> {
+    match op {
+        BiAdd => Some("wrapping_add"),
+        BiSub => Some("wrapping_sub"),
+        BiMul => Some("wrapping_mul"),
+        _ => None,
     }
 }
 
