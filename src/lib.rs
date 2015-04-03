@@ -34,7 +34,7 @@ impl<'cx> Folder for WrappingFolder<'cx> {
         expr.map(|expr| { match expr.node {
             ExprUnary(UnNeg, inner) => {
                 // Recurse in sub-expressions
-                let inner = inner.map(|e| fold::noop_fold_expr(e, self));
+                let inner = self.fold_expr(inner);
                 // Rewrite `-a` to `a.wrapping_mul(!0)`
                 // This is equivalent to `a.wrapping_mul(-1)`, except it
                 // works on unsigned types as well
@@ -47,8 +47,8 @@ impl<'cx> Folder for WrappingFolder<'cx> {
             }
             ExprBinary(op, left, right) => {
                 // Recurse in sub-expressions
-                let left = left.map(|e| fold::noop_fold_expr(e, self));
-                let right = right.map(|e| fold::noop_fold_expr(e, self));
+                let left = self.fold_expr(left);
+                let right = self.fold_expr(right);
                 // Rewrite e.g. `a + b` to `a.wrapping_add(b)`
                 match wrapping_method(op.node) {
                     Some(method) => self.cx.expr_method_call(
@@ -62,7 +62,7 @@ impl<'cx> Folder for WrappingFolder<'cx> {
             },
             ExprAssignOp(op, target, source) => {
                 // Recurse in sub-expressions
-                let source = source.map(|e| fold::noop_fold_expr(e, self));
+                let source = self.fold_expr(source);
                 // Rewrite e.g. `a += b` to `a = a.wrapping_add(b)`
                 Expr {
                     node: match wrapping_method(op.node) {
