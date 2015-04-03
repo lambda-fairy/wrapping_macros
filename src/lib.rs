@@ -8,8 +8,9 @@ use std::borrow::ToOwned;
 use std::rc::Rc;
 use syntax::ast::{
     BinOp_, Block, BiAdd, BiSub, BiMul, Delimited,
-    Expr, ExprAssign, ExprAssignOp, ExprBinary, Ident,
-    Stmt, Mac, TokenTree, TtDelimited
+    Expr, ExprAssign, ExprAssignOp, ExprBinary, ExprUnary,
+    LitInt, UnsuffixedIntLit, Sign, UnNeg, UnNot,
+    Ident, Stmt, Mac, TokenTree, TtDelimited
 };
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{ExtCtxt, MacResult};
@@ -31,6 +32,19 @@ impl<'cx> Folder for WrappingFolder<'cx> {
 
     fn fold_expr(&mut self, expr: P<Expr>) -> P<Expr> {
         expr.map(|expr| { match expr.node {
+            ExprUnary(UnNeg, inner) => {
+                // Recurse in sub-expressions
+                let inner = inner.map(|e| fold::noop_fold_expr(e, self));
+                // Rewrite `-a` to `a.wrapping_mul(!0)`
+                // This is equivalent to `a.wrapping_mul(-1)`, except it
+                // works on unsigned types as well
+                let method = token::str_to_ident("wrapping_mul");
+                let zero = self.cx.expr_lit(
+                    DUMMY_SP, LitInt(0, UnsuffixedIntLit(Sign::Plus)));
+                let neg_one = self.cx.expr_unary(DUMMY_SP, UnNot, zero);
+                self.cx.expr_method_call(expr.span, inner, method, vec![neg_one])
+                    .and_then(|e| e)
+            }
             ExprBinary(op, left, right) => {
                 // Recurse in sub-expressions
                 let left = left.map(|e| fold::noop_fold_expr(e, self));
