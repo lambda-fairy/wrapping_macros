@@ -12,6 +12,8 @@ See [this Internals thread][1] for the motivation behind this crate.
 
 [1]: http://internals.rust-lang.org/t/ergonomics-of-wrapping-operations/1756?u=lfairy
 
+**Note:** This crate uses internal compiler APIs, and so requires the Nightly version of Rust.
+
 
 ## Cargo
 
