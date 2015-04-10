@@ -111,7 +111,7 @@ impl<'cx> WrappingResult<'cx> {
         }));
         let mut parser = parse::tts_to_parser(cx.parse_sess, vec![block],
                                               cx.cfg.clone());
-        let block = parser.parse_block();
+        let block = parser.parse_block().unwrap_or_else(|err| panic!(err));
         // Perform the fold
         let block = WrappingFolder { cx: cx }.fold_block(block);
         Some(callback(cx, block))
