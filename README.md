@@ -4,9 +4,9 @@ A macro for wrapping arithmetic.
 
 Any code within a `wrapping! { .. }` block will be transformed as follows:
 
-* `a + b` becomes `a.wrapping_add(b)`. Similarly for `-` and `*`.
-* `a += b` becomes `a = a.wrapping_add(b)`. Similarly for `-=` and `*=`.
-* `-a` becomes `a.wrapping_mul(!0)`.
+* `a + b` becomes `a.wrapping_add(b)`. Similarly for `-`, `*`, `/`, `%`, `<<`, `>>`.
+* `a += b` becomes `a = a.wrapping_add(b)`. Similarly for `-=`, `*=`, `/=`, `%=`, `<<=`, `>>=`.
+* `-a` becomes `a.wrapping_neg()`.
 
 See [this Internals thread][1] for the motivation behind this crate.
 

@@ -7,9 +7,8 @@ extern crate rustc;
 use std::borrow::ToOwned;
 use std::rc::Rc;
 use syntax::ast::{
-    BinOp_, BiAdd, BiSub, BiMul, Delimited,
-    Expr, ExprAssign, ExprAssignOp, ExprBinary, ExprUnary,
-    LitInt, UnsuffixedIntLit, Sign, UnNeg, UnNot,
+    BinOp_, BiAdd, BiSub, BiMul, BiDiv, BiRem, BiShl, BiShr, UnNeg,
+    Delimited, Expr, ExprAssign, ExprAssignOp, ExprBinary, ExprUnary,
     Ident, Mac, TokenTree, TtDelimited
 };
 use syntax::codemap::{DUMMY_SP, Span};
@@ -35,14 +34,9 @@ impl<'cx> Folder for WrappingFolder<'cx> {
             ExprUnary(UnNeg, inner) => {
                 // Recurse in sub-expressions
                 let inner = self.fold_expr(inner);
-                // Rewrite `-a` to `a.wrapping_mul(!0)`
-                // This is equivalent to `a.wrapping_mul(-1)`, except it
-                // works on unsigned types as well
-                let method = token::str_to_ident("wrapping_mul");
-                let zero = self.cx.expr_lit(
-                    DUMMY_SP, LitInt(0, UnsuffixedIntLit(Sign::Plus)));
-                let neg_one = self.cx.expr_unary(DUMMY_SP, UnNot, zero);
-                self.cx.expr_method_call(expr.span, inner, method, vec![neg_one])
+                // Rewrite `-a` to `a.wrapping_neg()`
+                let method = token::str_to_ident("wrapping_neg");
+                self.cx.expr_method_call(expr.span, inner, method, vec![])
                     .and_then(|e| e)
             }
             ExprBinary(op, left, right) => {
@@ -87,6 +81,10 @@ fn wrapping_method(op: BinOp_) -> Option<Ident> {
         BiAdd => "wrapping_add",
         BiSub => "wrapping_sub",
         BiMul => "wrapping_mul",
+        BiDiv => "wrapping_div",
+        BiRem => "wrapping_rem",
+        BiShl => "wrapping_shl",
+        BiShr => "wrapping_shr",
         _ => return None,
     }))
 }
