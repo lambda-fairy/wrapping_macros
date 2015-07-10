@@ -1,4 +1,3 @@
-#![feature(core)]
 #![feature(plugin)]
 #![plugin(wrapping_macros)]
 
