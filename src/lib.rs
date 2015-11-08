@@ -9,7 +9,7 @@ use std::rc::Rc;
 use syntax::ast::{
     BinOp_, BiAdd, BiSub, BiMul, BiDiv, BiRem, BiShl, BiShr, UnNeg,
     Delimited, Expr, ExprAssign, ExprAssignOp, ExprBinary, ExprUnary,
-    Ident, Mac, TokenTree, TtDelimited
+    Ident, Mac, TokenTree
 };
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{ExtCtxt, MacEager, MacResult};
@@ -91,7 +91,7 @@ fn wrapping_method(op: BinOp_) -> Option<Ident> {
 
 fn expand_wrapping<'cx>(cx: &'cx mut ExtCtxt, sp: Span, tts: &[TokenTree]) -> Box<MacResult + 'cx> {
     // Parse the token tree as a block
-    let block = TtDelimited(sp, Rc::new(Delimited {
+    let block = TokenTree::Delimited(sp, Rc::new(Delimited {
         delim: DelimToken::Brace,
         open_span: DUMMY_SP,
         tts: tts.to_owned(),
