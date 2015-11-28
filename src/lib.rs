@@ -1,8 +1,8 @@
 #![crate_type = "dylib"]
 #![feature(plugin_registrar, rustc_private)]
 
+extern crate rustc_plugin;
 extern crate syntax;
-extern crate rustc;
 
 use std::borrow::ToOwned;
 use std::rc::Rc;
@@ -11,6 +11,7 @@ use syntax::ast::{
     Delimited, Expr, ExprAssign, ExprAssignOp, ExprBinary, ExprUnary,
     Ident, Mac, TokenTree
 };
+use rustc_plugin::Registry;
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{ExtCtxt, MacEager, MacResult};
 use syntax::ext::build::AstBuilder;
@@ -18,7 +19,6 @@ use syntax::fold::{self, Folder};
 use syntax::parse;
 use syntax::parse::token::{self, DelimToken};
 use syntax::ptr::P;
-use rustc::plugin::Registry;
 
 struct WrappingFolder<'cx> {
     cx: &'cx ExtCtxt<'cx>,
