@@ -27,7 +27,8 @@ struct WrappingFolder<'cx> {
 
 impl<'cx> Folder for WrappingFolder<'cx> {
     fn fold_mac(&mut self, mac: Mac) -> Mac {
-        self.cx.span_fatal(mac.span, "cannot call nested macros in a `wrapping!` block");
+        self.cx.span_err(mac.span, "cannot call nested macros in a `wrapping!` block");
+        mac
     }
 
     fn fold_expr(&mut self, expr: P<Expr>) -> P<Expr> {
