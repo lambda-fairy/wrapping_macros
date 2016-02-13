@@ -7,9 +7,8 @@ extern crate syntax;
 use std::borrow::ToOwned;
 use std::rc::Rc;
 use syntax::ast::{
-    BinOp_, BiAdd, BiSub, BiMul, BiDiv, BiRem, BiShl, BiShr, UnNeg,
-    Delimited, Expr, ExprAssign, ExprAssignOp, ExprBinary, ExprUnary,
-    Ident, Mac, TokenTree
+    BinOpKind, Delimited, Expr, ExprKind,
+    Ident, Mac, TokenTree, UnOp
 };
 use rustc_plugin::Registry;
 use syntax::codemap::{DUMMY_SP, Span};
@@ -33,7 +32,7 @@ impl<'cx> Folder for WrappingFolder<'cx> {
 
     fn fold_expr(&mut self, expr: P<Expr>) -> P<Expr> {
         expr.map(|expr| { match expr.node {
-            ExprUnary(UnNeg, inner) => {
+            ExprKind::Unary(UnOp::Neg, inner) => {
                 // Recurse in sub-expressions
                 let inner = self.fold_expr(inner);
                 // Rewrite `-a` to `a.wrapping_neg()`
@@ -41,7 +40,7 @@ impl<'cx> Folder for WrappingFolder<'cx> {
                 self.cx.expr_method_call(expr.span, inner, method, vec![])
                     .and_then(|e| e)
             }
-            ExprBinary(op, left, right) => {
+            ExprKind::Binary(op, left, right) => {
                 // Recurse in sub-expressions
                 let left = self.fold_expr(left);
                 let right = self.fold_expr(right);
@@ -51,12 +50,12 @@ impl<'cx> Folder for WrappingFolder<'cx> {
                         expr.span, left, method, vec![right]).and_then(|e| e),
                     None =>
                         Expr {
-                            node: ExprBinary(op, left, right),
+                            node: ExprKind::Binary(op, left, right),
                             ..expr
                         },
                 }
             },
-            ExprAssignOp(op, target, source) => {
+            ExprKind::AssignOp(op, target, source) => {
                 // Recurse in sub-expressions
                 let source = self.fold_expr(source);
                 // Rewrite e.g. `a += b` to `a = a.wrapping_add(b)`
@@ -65,9 +64,9 @@ impl<'cx> Folder for WrappingFolder<'cx> {
                         Some(method) => {
                             let call = self.cx.expr_method_call(
                                 expr.span, target.clone(), method, vec![source]);
-                            ExprAssign(target, call)
+                            ExprKind::Assign(target, call)
                         },
-                        None => ExprAssignOp(op, target, source),
+                        None => ExprKind::AssignOp(op, target, source),
                     },
                     ..expr
                 }
@@ -78,15 +77,15 @@ impl<'cx> Folder for WrappingFolder<'cx> {
 }
 
 /// Returns the wrapping version of an operator, if applicable.
-fn wrapping_method(op: BinOp_) -> Option<Ident> {
+fn wrapping_method(op: BinOpKind) -> Option<Ident> {
     Some(token::str_to_ident(match op {
-        BiAdd => "wrapping_add",
-        BiSub => "wrapping_sub",
-        BiMul => "wrapping_mul",
-        BiDiv => "wrapping_div",
-        BiRem => "wrapping_rem",
-        BiShl => "wrapping_shl",
-        BiShr => "wrapping_shr",
+        BinOpKind::Add => "wrapping_add",
+        BinOpKind::Sub => "wrapping_sub",
+        BinOpKind::Mul => "wrapping_mul",
+        BinOpKind::Div => "wrapping_div",
+        BinOpKind::Rem => "wrapping_rem",
+        BinOpKind::Shl => "wrapping_shl",
+        BinOpKind::Shr => "wrapping_shr",
         _ => return None,
     }))
 }
