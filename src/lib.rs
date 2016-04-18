@@ -12,8 +12,7 @@ use syntax::ast::{
 };
 use rustc_plugin::Registry;
 use syntax::codemap::{DUMMY_SP, Span};
-use syntax::errors::FatalError;
-use syntax::ext::base::{ExtCtxt, MacEager, MacResult};
+use syntax::ext::base::{DummyResult, ExtCtxt, MacEager, MacResult};
 use syntax::ext::build::AstBuilder;
 use syntax::fold::{self, Folder};
 use syntax::parse;
@@ -100,11 +99,18 @@ fn expand_wrapping<'cx>(cx: &'cx mut ExtCtxt, sp: Span, tts: &[TokenTree]) -> Bo
     }));
     let mut parser = parse::tts_to_parser(cx.parse_sess, vec![block],
                                           cx.cfg.clone());
-    let block = parser.parse_block().unwrap_or_else(|mut e| { e.emit(); panic!(FatalError) });
-    // Perform the fold
-    let block = WrappingFolder { cx: cx }.fold_block(block);
-    // Done!
-    MacEager::expr(cx.expr_block(block))
+    match parser.parse_block() {
+        Ok(block) => {
+            // Perform the fold
+            let block = WrappingFolder { cx: cx }.fold_block(block);
+            MacEager::expr(cx.expr_block(block))
+        },
+        Err(mut e) => {
+            // Emit the parse error and continue
+            e.emit();
+            DummyResult::expr(sp)
+        },
+    }
 }
 
 #[plugin_registrar]
