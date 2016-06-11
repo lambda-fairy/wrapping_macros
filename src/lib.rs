@@ -19,11 +19,11 @@ use syntax::parse;
 use syntax::parse::token::{self, DelimToken};
 use syntax::ptr::P;
 
-struct WrappingFolder<'cx> {
-    cx: &'cx ExtCtxt<'cx>,
+struct WrappingFolder<'cx, 'a: 'cx> {
+    cx: &'cx ExtCtxt<'a>,
 }
 
-impl<'cx> Folder for WrappingFolder<'cx> {
+impl<'cx, 'a> Folder for WrappingFolder<'cx, 'a> {
     fn fold_mac(&mut self, mac: Mac) -> Mac {
         self.cx.span_err(mac.span, "cannot call nested macros in a `wrapping!` block");
         mac
