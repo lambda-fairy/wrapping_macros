@@ -5,11 +5,7 @@ extern crate rustc_plugin;
 extern crate syntax;
 
 use std::borrow::ToOwned;
-use std::rc::Rc;
-use syntax::ast::{
-    BinOpKind, Delimited, Expr, ExprKind,
-    Ident, Mac, TokenTree, UnOp
-};
+use syntax::ast::{BinOpKind, Expr, ExprKind, Ident, Mac, UnOp};
 use rustc_plugin::Registry;
 use syntax::codemap::{DUMMY_SP, Span};
 use syntax::ext::base::{DummyResult, ExtCtxt, MacEager, MacResult};
@@ -18,6 +14,7 @@ use syntax::fold::{self, Folder};
 use syntax::parse;
 use syntax::parse::token::{self, DelimToken};
 use syntax::ptr::P;
+use syntax::tokenstream::{Delimited, TokenTree};
 
 struct WrappingFolder<'cx, 'a: 'cx> {
     cx: &'cx ExtCtxt<'a>,
@@ -91,12 +88,12 @@ fn wrapping_method(op: BinOpKind) -> Option<Ident> {
 
 fn expand_wrapping<'cx>(cx: &'cx mut ExtCtxt, sp: Span, tts: &[TokenTree]) -> Box<MacResult + 'cx> {
     // Parse the token tree as a block
-    let block = TokenTree::Delimited(sp, Rc::new(Delimited {
+    let block = TokenTree::Delimited(sp, Delimited {
         delim: DelimToken::Brace,
         open_span: DUMMY_SP,
         tts: tts.to_owned(),
         close_span: DUMMY_SP,
-    }));
+    });
     let mut parser = parse::tts_to_parser(cx.parse_sess, vec![block],
                                           cx.cfg.clone());
     match parser.parse_block() {
