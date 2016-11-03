@@ -95,8 +95,7 @@ fn expand_wrapping<'cx>(cx: &'cx mut ExtCtxt, sp: Span, tts: &[TokenTree]) -> Bo
         tts: tts.to_owned(),
         close_span: DUMMY_SP,
     }));
-    let mut parser = parse::tts_to_parser(cx.parse_sess, vec![block],
-                                          cx.cfg.clone());
+    let mut parser = parse::tts_to_parser(cx.parse_sess, vec![block]);
     match parser.parse_block() {
         Ok(block) => {
             // Perform the fold
