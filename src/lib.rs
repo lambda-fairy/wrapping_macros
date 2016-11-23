@@ -13,7 +13,7 @@ use syntax::ext::base::{DummyResult, ExtCtxt, MacEager, MacResult};
 use syntax::ext::build::AstBuilder;
 use syntax::fold::{self, Folder};
 use syntax::parse;
-use syntax::parse::token::{self, DelimToken};
+use syntax::parse::token::DelimToken;
 use syntax::ptr::P;
 use syntax::tokenstream::{Delimited, TokenTree};
 
@@ -33,7 +33,7 @@ impl<'cx, 'a> Folder for WrappingFolder<'cx, 'a> {
                 // Recurse in sub-expressions
                 let inner = self.fold_expr(inner);
                 // Rewrite `-a` to `a.wrapping_neg()`
-                let method = token::str_to_ident("wrapping_neg");
+                let method = Ident::from_str("wrapping_neg");
                 self.cx.expr_method_call(expr.span, inner, method, vec![])
                     .and_then(|e| e)
             }
@@ -75,7 +75,7 @@ impl<'cx, 'a> Folder for WrappingFolder<'cx, 'a> {
 
 /// Returns the wrapping version of an operator, if applicable.
 fn wrapping_method(op: BinOpKind) -> Option<Ident> {
-    Some(token::str_to_ident(match op {
+    Some(Ident::from_str(match op {
         BinOpKind::Add => "wrapping_add",
         BinOpKind::Sub => "wrapping_sub",
         BinOpKind::Mul => "wrapping_mul",
