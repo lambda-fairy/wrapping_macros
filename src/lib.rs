@@ -8,7 +8,7 @@ use rustc_plugin::Registry;
 use std::borrow::ToOwned;
 use std::rc::Rc;
 use syntax::ast::{BinOpKind, Expr, ExprKind, Ident, Mac, UnOp};
-use syntax::codemap::{DUMMY_SP, Span};
+use syntax::codemap::Span;
 use syntax::ext::base::{DummyResult, ExtCtxt, MacEager, MacResult};
 use syntax::ext::build::AstBuilder;
 use syntax::fold::{self, Folder};
@@ -91,9 +91,7 @@ fn expand_wrapping<'cx>(cx: &'cx mut ExtCtxt, sp: Span, tts: &[TokenTree]) -> Bo
     // Parse the token tree as a block
     let block = TokenTree::Delimited(sp, Rc::new(Delimited {
         delim: DelimToken::Brace,
-        open_span: DUMMY_SP,
         tts: tts.to_owned(),
-        close_span: DUMMY_SP,
     }));
     let mut parser = parse::tts_to_parser(cx.parse_sess, vec![block]);
     match parser.parse_block() {
