@@ -6,10 +6,12 @@ authors = ["Chris Wong <lambda.fairy@gmail.com>"]
 
 license = "MIT/Apache-2.0"
 repository = "https://github.com/lfairy/wrapping_macros"
-description = """
-A macro for wrapping arithmetic.
-"""
+description = "A macro for wrapping arithmetic."
+categories = ["rust-patterns"]
 
 [lib]
 name = "wrapping_macros"
 plugin = true
+
+[badges]
+travis-ci = { repository = "lfairy/wrapping_macros" }
